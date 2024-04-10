@@ -12,7 +12,7 @@ def generate_pdf(df):
         # Create a new PDF file for each user
         pdf = FPDF(orientation='L')  # Set PDF to landscape mode
         pdf.add_page()
-        pdf.set_font("Arial", size=8)  # Reduce font size
+        pdf.set_font("Arial", size=6)  # Reduce font size to 6
 
         # Add a title
         pdf.cell(200, 10, f"Details of : {name}", ln=True, align='C')
@@ -77,17 +77,3 @@ def generate_pdf(df):
         else:
             st.warning(f"File not found: {pdf_file}")
     os.remove(zip_filename)
-
-# Streamlit web app
-def main():
-    st.title('PDF Generator')
-    uploaded_file = st.file_uploader("Upload CSV or Excel file", type=['csv', 'xlsx'])
-
-    if uploaded_file is not None:
-        df = pd.read_csv(uploaded_file) if uploaded_file.name.endswith('csv') else pd.read_excel(uploaded_file)
-        df = df.drop_duplicates()
-        generate_pdf(df)
-        st.success("PDF files generated successfully!")
-
-if __name__ == '__main__':
-    main()
