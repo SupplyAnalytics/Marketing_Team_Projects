@@ -4,7 +4,6 @@ from fpdf import FPDF
 import os
 import zipfile
 import base64
-
 def generate_pdf(df):
     pdf_files = []  # List to store the names of the generated PDF files
     # Group by name and iterate over groups
@@ -77,3 +76,17 @@ def generate_pdf(df):
         else:
             st.warning(f"File not found: {pdf_file}")
     os.remove(zip_filename)
+
+# Streamlit web app
+def main():
+    st.title('PDF Generator')
+    uploaded_file = st.file_uploader("Upload CSV or Excel file", type=['csv', 'xlsx'])
+
+    if uploaded_file is not None:
+        df = pd.read_csv(uploaded_file) if uploaded_file.name.endswith('csv') else pd.read_excel(uploaded_file)
+        df = df.drop_duplicates()
+        generate_pdf(df)
+        st.success("PDF files generated successfully!")
+
+if __name__ == '__main__':
+    main()
