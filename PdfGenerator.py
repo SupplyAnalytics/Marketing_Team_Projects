@@ -35,7 +35,7 @@ def generate_pdf(df):
         for _, row in group.iterrows():
             for column, max_length in max_lengths.items():
                 cell_text = str(row[column]).replace('\n', ' ')  # Replace newline characters with spaces
-                cell_text = cell_text.strip()  # Remove leading and trailing whitespaces
+                cell_text = cell_text.strip() if cell_text != 'nan' else ''  # Replace 'nan' values with blanks
                 parts = cell_text.split(" ")
                 lines = []
                 line = ""
@@ -90,4 +90,4 @@ def main():
         st.success("PDF files generated successfully!")
 
 if __name__ == '__main__':
-    main() 
+    main()
