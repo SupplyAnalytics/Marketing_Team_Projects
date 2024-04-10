@@ -82,7 +82,7 @@ def generate_pdf(df):
     os.remove(zip_filename)
 
 def main():
-    st.title('Welcome to the RM Pdf Generator App')
+    st.title('Pdf Generator App')
     st.write('Upload a CSV or Excel file containing RM data to generate PDFs for each RM.')
 
     uploaded_file = st.file_uploader("Upload CSV or Excel file", type=['csv', 'xlsx'])
