@@ -6,12 +6,9 @@ import zipfile
 import base64
 
 def generate_pdf(df):
-    pdf_files = {}  # Dictionary to store the names of the generated PDF files
+    pdf_files = []  # List to store the names of the generated PDF files
     # Group by name and iterate over groups
     for (RM_BP_SKID, RM_BP_Name), group in df.groupby(['RM_BP_SKID', 'RM_BP_Name']):
-        # Check if a PDF file for this user already exists
-        if (RM_BP_SKID, RM_BP_Name) in pdf_files:
-            continue  # Skip generating PDF if it already exists
         # Create a new PDF file for each user
         pdf = FPDF(orientation='L')  # Set PDF to landscape mode
         pdf.add_page()
@@ -58,12 +55,12 @@ def generate_pdf(df):
         # Save the PDF file
         pdf_filename = f"user_{RM_BP_Name}_info.pdf"
         pdf.output(pdf_filename)
-        pdf_files[(RM_BP_SKID, RM_BP_Name)] = pdf_filename  # Add the filename to the dictionary
+        pdf_files.append(pdf_filename)  # Add the filename to the list
 
     # Create a zip file containing all the PDF files
     zip_filename = "pdf_files.zip"
     with zipfile.ZipFile(zip_filename, 'w') as zipf:
-        for pdf_file in pdf_files.values():
+        for pdf_file in pdf_files:
             zipf.write(pdf_file)
 
     # Provide a download button for the zip file
@@ -74,7 +71,7 @@ def generate_pdf(df):
     st.markdown(href, unsafe_allow_html=True)
 
     # Remove the individual PDF files and the zip file
-    for pdf_file in pdf_files.values():
+    for pdf_file in pdf_files:
         if os.path.exists(pdf_file):
             os.remove(pdf_file)
         else:
