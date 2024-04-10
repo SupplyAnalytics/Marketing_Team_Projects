@@ -8,18 +8,18 @@ import base64
 def generate_pdf(df):
     pdf_files = []  # List to store the names of the generated PDF files
     # Group by name and iterate over groups
-    for (RM_BP_SKID, RM_BP_Name), group in df.groupby(['RM_BP_SKID', 'RM_BP_Name']):
+    for (EmployeeId, EmployeeName), group in df.groupby(['EmployeeId', 'EmployeeName']):
         # Create a new PDF file for each user
         pdf = FPDF(orientation='L')  # Set PDF to landscape mode
         pdf.add_page()
         pdf.set_font("Arial", size=6)  # Reduce font size to 6
 
         # Add a title
-        pdf.cell(200, 10, f"Details of SKID: {RM_BP_SKID} & Name {RM_BP_Name}", ln=True, align='C')
+        pdf.cell(200, 10, f"Details of SKID: {EmployeeId} & Name: {EmployeeName}", ln=True, align='C')
         pdf.ln(5)
 
         # Calculate the maximum length of text in each column excluding the 'name' column
-        max_lengths = {column: max(group[column].astype(str).apply(len)) for column in group.columns if column not in ['RM_BP_Name', 'RM_BP_SKID']}
+        max_lengths = {column: max(group[column].astype(str).apply(len)) for column in group.columns if column not in ['EmployeeId', 'EmployeeName']}
 
         # Define the default column width
         default_width = 12  # Increased default width to 20 for the first column
@@ -53,7 +53,7 @@ def generate_pdf(df):
             pdf.ln()
 
         # Save the PDF file
-        pdf_filename = f"SKID : {RM_BP_SKID} & SKName: {RM_BP_Name}_info.pdf"
+        pdf_filename = f"SKID : {EmployeeId} & SKName: {EmployeeName}_info.pdf"
         pdf.output(pdf_filename)
         pdf_files.append(pdf_filename)  # Add the filename to the list
 
