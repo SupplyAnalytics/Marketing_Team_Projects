@@ -4,10 +4,14 @@ from fpdf import FPDF
 import os
 import zipfile
 import base64
+
 def generate_pdf(df):
-    pdf_files = []  # List to store the names of the generated PDF files
+    pdf_files = {}  # Dictionary to store the names of the generated PDF files
     # Group by name and iterate over groups
-    for (RM_BP_SKID,RM_BP_Name), group in df.groupby(['RM_BP_SKID','RM_BP_Name']):
+    for (RM_BP_SKID, RM_BP_Name), group in df.groupby(['RM_BP_SKID', 'RM_BP_Name']):
+        # Check if a PDF file for this user already exists
+        if (RM_BP_SKID, RM_BP_Name) in pdf_files:
+            continue  # Skip generating PDF if it already exists
         # Create a new PDF file for each user
         pdf = FPDF(orientation='L')  # Set PDF to landscape mode
         pdf.add_page()
@@ -54,12 +58,12 @@ def generate_pdf(df):
         # Save the PDF file
         pdf_filename = f"user_{RM_BP_Name}_info.pdf"
         pdf.output(pdf_filename)
-        pdf_files.append(pdf_filename)  # Add the filename to the list
+        pdf_files[(RM_BP_SKID, RM_BP_Name)] = pdf_filename  # Add the filename to the dictionary
 
     # Create a zip file containing all the PDF files
     zip_filename = "pdf_files.zip"
     with zipfile.ZipFile(zip_filename, 'w') as zipf:
-        for pdf_file in pdf_files:
+        for pdf_file in pdf_files.values():
             zipf.write(pdf_file)
 
     # Provide a download button for the zip file
@@ -70,16 +74,17 @@ def generate_pdf(df):
     st.markdown(href, unsafe_allow_html=True)
 
     # Remove the individual PDF files and the zip file
-    for pdf_file in pdf_files:
+    for pdf_file in pdf_files.values():
         if os.path.exists(pdf_file):
             os.remove(pdf_file)
         else:
             st.warning(f"File not found: {pdf_file}")
     os.remove(zip_filename)
 
-# Streamlit web app
 def main():
-    st.title('PDF Generator')
+    st.title('Welcome to the RM Pdf Generation App')
+    st.write('Upload a CSV or Excel file containing RM data to generate PDFs for each RM.')
+
     uploaded_file = st.file_uploader("Upload CSV or Excel file", type=['csv', 'xlsx'])
 
     if uploaded_file is not None:
