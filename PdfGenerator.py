@@ -53,7 +53,7 @@ def generate_pdf(df):
             pdf.ln()
 
         # Save the PDF file
-        pdf_filename = f"user_{RM_BP_Name}_info.pdf"
+        pdf_filename = f"SKID : {RM_BP_SKID} & SKName: {RM_BP_Name}_info.pdf"
         pdf.output(pdf_filename)
         pdf_files.append(pdf_filename)  # Add the filename to the list
 
