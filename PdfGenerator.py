@@ -4,6 +4,7 @@ from fpdf import FPDF
 import os
 import zipfile
 import base64
+import re
 
 def generate_pdf(df):
     pdf_files = []  # List to store the names of the generated PDF files
@@ -86,6 +87,8 @@ def main():
 
     if uploaded_file is not None:
         df = pd.read_csv(uploaded_file) if uploaded_file.name.endswith('csv') else pd.read_excel(uploaded_file)
+        df = df.applymap(str)
+        df=df[df.apply(lambda x: x.str.match('^[\x00-\x7F]*$')).all(axis=1)]
         df = df.drop_duplicates()
         generate_pdf(df)
         st.success("PDF files generated successfully!")
