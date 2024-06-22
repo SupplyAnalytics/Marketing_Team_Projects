@@ -4,6 +4,7 @@ from fpdf import FPDF
 import os
 import zipfile
 import base64
+import re
 
 def generate_pdf(df):
     pdf_files = []  # List to store the names of the generated PDF files
@@ -36,11 +37,18 @@ def generate_pdf(df):
             for column, max_length in max_lengths.items():
                 cell_text = str(row[column]).replace('\n', ' ')  # Replace newline characters with spaces
                 cell_text = cell_text.strip() if cell_text != 'nan' else ''  # Replace 'nan' values with blanks
-
-                # Check if cell_text exceeds a certain length
-                if len(cell_text) > 40:  # Change 40 to your desired length
-                    # Add a new page if cell_text exceeds the length
-                    pdf.add_page()
+                parts = cell_text.split(" ")
+                lines = []
+                line = ""
+                for part in parts:
+                    if len(line) + len(part) < default_width:  # Adjust the length based on your requirement
+                        line += f" {part}"
+                    else:
+                        lines.append(line)
+                        line = f"{part}"
+                if line:
+                    lines.append(line)
+                cell_text = "\n".join(lines)
                 column_width = max_length if max_length >= default_width else default_width
                 pdf.cell(column_width * 2, 5, cell_text, 1, 0, 'L')  # Print cell value with text wrapping
             pdf.ln()
