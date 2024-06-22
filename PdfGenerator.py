@@ -5,29 +5,9 @@ import os
 import zipfile
 import base64
 
-def wrap_text(text, max_length=40):
-    """Wrap text to a new line after a specified number of characters."""
-    words = text.split(' ')
-    lines = []
-    current_line = []
-    current_length = 0
-
-    for word in words:
-        if current_length + len(word) + 1 > max_length:
-            lines.append(' '.join(current_line))
-            current_line = [word]
-            current_length = len(word) + 1
-        else:
-            current_line.append(word)
-            current_length += len(word) + 1
-
-    lines.append(' '.join(current_line))  # Add the last line
-    return '\n'.join(lines)
-
 def generate_pdf(df):
     pdf_files = []  # List to store the names of the generated PDF files
-
-    # Group by EmployeeId and iterate over groups
+    # Group by name and iterate over groups
     for EmployeeId, group in df.groupby('EmployeeId'):
         # Create a new PDF file for each user
         pdf = FPDF(orientation='L')  # Set PDF to landscape mode
@@ -38,11 +18,11 @@ def generate_pdf(df):
         pdf.cell(200, 10, f"Details of SKID: {EmployeeId}", ln=True, align='C')
         pdf.ln(5)
 
-        # Calculate the maximum length of text in each column excluding the 'EmployeeId' column
-        max_lengths = {column: max(group[column].astype(str).apply(len)) for column in group.columns if column != 'EmployeeId'}
+        # Calculate the maximum length of text in each column excluding the 'name' column
+        max_lengths = {column: max(group[column].astype(str).apply(len)) for column in group.columns if column !='EmployeeId'}
 
         # Define the default column width
-        default_width = 12  # Increased default width to 12 for the first column
+        default_width = 12  # Increased default width to 20 for the first column
 
         # Add a table header
         pdf.set_fill_color(200, 220, 255)
@@ -56,20 +36,17 @@ def generate_pdf(df):
             for column, max_length in max_lengths.items():
                 cell_text = str(row[column]).replace('\n', ' ')  # Replace newline characters with spaces
                 cell_text = cell_text.strip() if cell_text != 'nan' else ''  # Replace 'nan' values with blanks
-                
-                if column == 'address':  # Assuming the column to wrap is named 'address'
-                    wrapped_text = wrap_text(cell_text, 40)  # Wrap text after 40 characters
-                    column_width = max_length if max_length >= default_width else default_width
-                    pdf.multi_cell(column_width * 2, 5, wrapped_text, 1, 'L')  # Print cell value with text wrapping
-                    pdf.ln()  # Move to the next line after multi_cell
-                else:
-                    column_width = max_length if max_length >= default_width else default_width
-                    pdf.cell(column_width * 2, 5, cell_text, 1, 0, 'L')  # Print cell value without text wrapping
 
+                # Check if cell_text exceeds a certain length
+                if len(cell_text) > 40:  # Change 40 to your desired length
+                    # Add a new page if cell_text exceeds the length
+                    pdf.add_page()
+                column_width = max_length if max_length >= default_width else default_width
+                pdf.cell(column_width * 2, 5, cell_text, 1, 0, 'L')  # Print cell value with text wrapping
             pdf.ln()
 
         # Save the PDF file
-        pdf_filename = f"SKID_{EmployeeId}_info.pdf"
+        pdf_filename = f"SKID:{EmployeeId}_info.pdf"
         pdf.output(pdf_filename)
         pdf_files.append(pdf_filename)  # Add the filename to the list
 
@@ -103,7 +80,7 @@ def main():
     if uploaded_file is not None:
         df = pd.read_csv(uploaded_file) if uploaded_file.name.endswith('csv') else pd.read_excel(uploaded_file)
         df = df.applymap(str)
-        df = df[df.apply(lambda x: x.str.match('^[\x00-\x7F]*$')).all(axis=1)]
+        df=df[df.apply(lambda x: x.str.match('^[\x00-\x7F]*$')).all(axis=1)]
         df = df.drop_duplicates()
         generate_pdf(df)
         st.success("PDF files generated successfully!")
