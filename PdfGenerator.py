@@ -4,11 +4,11 @@ from fpdf import FPDF
 import os
 import zipfile
 import base64
-import re
 
 def generate_pdf(df):
     pdf_files = []  # List to store the names of the generated PDF files
-    # Group by name and iterate over groups
+
+    # Group by EmployeeId and iterate over groups
     for EmployeeId, group in df.groupby('EmployeeId'):
         # Create a new PDF file for each user
         pdf = FPDF(orientation='L')  # Set PDF to landscape mode
@@ -19,38 +19,38 @@ def generate_pdf(df):
         pdf.cell(200, 10, f"Details of SKID: {EmployeeId}", ln=True, align='C')
         pdf.ln(5)
 
-        # Calculate the maximum length of text in each column excluding the 'name' column
-        max_lengths = {column: max(group[column].astype(str).apply(len)) for column in group.columns if column !='EmployeeId'}
+        # Calculate the maximum length of text in each column excluding the 'EmployeeId' column
+        max_lengths = {column: max(group[column].astype(str).apply(len)) for column in group.columns if column != 'EmployeeId'}
 
         # Define the default column width
-        default_width = 12  # Increased default width to 20 for the first column
+        default_width = 40  # Width in terms of character length
 
         # Add a table header
         pdf.set_fill_color(200, 220, 255)
-        for column, max_length in max_lengths.items():
-            column_width = max_length if max_length >= default_width else default_width
-            pdf.cell(column_width * 2, 5, column[:10], 1, 0, 'C', 1)  # Set column width based on maximum text length or default width
+        for column in group.columns:
+            column_width = max(max_lengths.get(column, 0), default_width) * 2
+            pdf.cell(column_width, 5, column[:10], 1, 0, 'C', 1)  # Set column width based on maximum text length or default width
         pdf.ln()
 
         # Add data to the table
         for _, row in group.iterrows():
-            for column, max_length in max_lengths.items():
+            for column in group.columns:
                 cell_text = str(row[column]).replace('\n', ' ')  # Replace newline characters with spaces
                 cell_text = cell_text.strip() if cell_text != 'nan' else ''  # Replace 'nan' values with blanks
-                parts = cell_text.split(" ")
-                lines = []
+
+                # Wrap text to fit within the cell
+                wrapped_text = ""
                 line = ""
-                for part in parts:
-                    if len(line) + len(part) < default_width:  # Adjust the length based on your requirement
-                        line += f" {part}"
+                for word in cell_text.split(" "):
+                    if len(line) + len(word) + 1 <= default_width:
+                        line += f" {word}"
                     else:
-                        lines.append(line)
-                        line = f"{part}"
-                if line:
-                    lines.append(line)
-                cell_text = "\n".join(lines)
-                column_width = max_length if max_length >= default_width else default_width
-                pdf.cell(column_width * 2, 5, cell_text, 1, 0, 'L')  # Print cell value with text wrapping
+                        wrapped_text += line.strip() + "\n"
+                        line = word
+                wrapped_text += line.strip()
+
+                column_width = max(max_lengths.get(column, 0), default_width) * 2
+                pdf.multi_cell(column_width, 5, wrapped_text, 1, 'L')  # Print cell value with text wrapping
             pdf.ln()
 
         # Save the PDF file
@@ -88,7 +88,7 @@ def main():
     if uploaded_file is not None:
         df = pd.read_csv(uploaded_file) if uploaded_file.name.endswith('csv') else pd.read_excel(uploaded_file)
         df = df.applymap(str)
-        df=df[df.apply(lambda x: x.str.match('^[\x00-\x7F]*$')).all(axis=1)]
+        df = df[df.apply(lambda x: x.str.match('^[\x00-\x7F]*$')).all(axis=1)]
         df = df.drop_duplicates()
         generate_pdf(df)
         st.success("PDF files generated successfully!")
