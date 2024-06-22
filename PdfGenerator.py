@@ -5,7 +5,7 @@ import os
 import zipfile
 import base64
 
-def wrap_text(text, max_length=40):
+def wrap_text(text, max_length=10):
     """Wrap text to a new line after a specified number of characters."""
     words = text.split(' ')
     lines = []
