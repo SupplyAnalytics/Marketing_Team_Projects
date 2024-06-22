@@ -22,7 +22,7 @@ def generate_pdf(df):
         max_lengths = {column: max(group[column].astype(str).apply(len)) for column in group.columns if column !='EmployeeId'}
 
         # Define the default column width
-        default_width = 12  # Increased default width to 20 for the first column
+        default_width = 20
 
         # Add a table header
         pdf.set_fill_color(200, 220, 255)
