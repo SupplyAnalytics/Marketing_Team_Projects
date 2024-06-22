@@ -34,6 +34,8 @@ def generate_pdf(df):
 
         # Add data to the table
         for _, row in group.iterrows():
+            max_lines = 0
+            cell_texts = []
             for column in group.columns:
                 cell_text = str(row[column]).replace('\n', ' ')  # Replace newline characters with spaces
                 cell_text = cell_text.strip() if cell_text != 'nan' else ''  # Replace 'nan' values with blanks
@@ -49,9 +51,18 @@ def generate_pdf(df):
                         line = word
                 wrapped_text += line.strip()
 
-                column_width = max(max_lengths.get(column, 0), default_width) * 2
-                pdf.multi_cell(column_width, 5, wrapped_text, 1, 'L')  # Print cell value with text wrapping
-            pdf.ln()
+                cell_texts.append(wrapped_text)
+                max_lines = max(max_lines, len(wrapped_text.split('\n')))
+
+            # Print each row with the correct number of lines
+            for i in range(max_lines):
+                for j, column in enumerate(group.columns):
+                    lines = cell_texts[j].split('\n')
+                    if i < len(lines):
+                        pdf.cell(max(max_lengths.get(column, 0), default_width) * 2, 5, lines[i], 1)
+                    else:
+                        pdf.cell(max(max_lengths.get(column, 0), default_width) * 2, 5, '', 1)
+                pdf.ln()
 
         # Save the PDF file
         pdf_filename = f"SKID:{EmployeeId}_info.pdf"
