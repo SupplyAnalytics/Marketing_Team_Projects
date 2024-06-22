@@ -4,10 +4,10 @@ from fpdf import FPDF
 import os
 import zipfile
 import base64
+import re
 
 def generate_pdf(df):
     pdf_files = []  # List to store the names of the generated PDF files
-
     # Group by EmployeeId and iterate over groups
     for EmployeeId, group in df.groupby('EmployeeId'):
         # Create a new PDF file for each user
@@ -27,42 +27,41 @@ def generate_pdf(df):
 
         # Add a table header
         pdf.set_fill_color(200, 220, 255)
-        for column in group.columns:
-            column_width = max(max_lengths.get(column, 0), default_width) * 2
-            pdf.cell(column_width, 5, column[:10], 1, 0, 'C', 1)  # Set column width based on maximum text length or default width
+        for column, max_length in max_lengths.items():
+            column_width = max(max_length, default_width)
+            pdf.cell(column_width * 2, 5, column[:10], 1, 0, 'C', 1)  # Set column width based on maximum text length or default width
         pdf.ln()
 
         # Add data to the table
         for _, row in group.iterrows():
-            max_lines = 0
-            cell_texts = []
-            for column in group.columns:
+            max_cell_height = 5  # Reset max cell height for each row
+            for column, max_length in max_lengths.items():
                 cell_text = str(row[column]).replace('\n', ' ')  # Replace newline characters with spaces
                 cell_text = cell_text.strip() if cell_text != 'nan' else ''  # Replace 'nan' values with blanks
 
-                # Wrap text to fit within the cell
-                wrapped_text = ""
-                line = ""
-                for word in cell_text.split(" "):
-                    if len(line) + len(word) + 1 <= default_width:
-                        line += f" {word}"
-                    else:
-                        wrapped_text += line.strip() + "\n"
-                        line = word
-                wrapped_text += line.strip()
+                column_width = max(max_length, default_width) * 2
 
-                cell_texts.append(wrapped_text)
-                max_lines = max(max_lines, len(wrapped_text.split('\n')))
+                if len(cell_text) > 40:  # Check if text length exceeds 40 characters
+                    # Wrap text to fit within the cell
+                    wrapped_text = ""
+                    line = ""
+                    for word in cell_text.split(" "):
+                        if len(line) + len(word) + 1 <= default_width:
+                            line += f" {word}"
+                        else:
+                            wrapped_text += line.strip() + "\n"
+                            line = word
+                    wrapped_text += line.strip()
 
-            # Print each row with the correct number of lines
-            for i in range(max_lines):
-                for j, column in enumerate(group.columns):
-                    lines = cell_texts[j].split('\n')
-                    if i < len(lines):
-                        pdf.cell(max(max_lengths.get(column, 0), default_width) * 2, 5, lines[i], 1)
-                    else:
-                        pdf.cell(max(max_lengths.get(column, 0), default_width) * 2, 5, '', 1)
-                pdf.ln()
+                    # Print cell value with text wrapping using multi_cell
+                    pdf.multi_cell(column_width, 5, wrapped_text, 1, 'L')
+                    cell_height = pdf.get_y() - pdf.get_y()
+                    max_cell_height = max(max_cell_height, cell_height)
+                else:
+                    # Print cell value without text wrapping
+                    pdf.cell(column_width, 5, cell_text, 1, 0, 'L')
+
+            pdf.ln(max_cell_height)  # Move to the next row with max cell height
 
         # Save the PDF file
         pdf_filename = f"SKID:{EmployeeId}_info.pdf"
