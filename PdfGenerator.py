@@ -5,7 +5,7 @@ import os
 import zipfile
 import base64
 
-def wrap_text(text, max_length=10):
+def wrap_text(text, max_length=40):
     """Wrap text to a new line after a specified number of characters."""
     words = text.split(' ')
     lines = []
@@ -61,6 +61,7 @@ def generate_pdf(df):
                     wrapped_text = wrap_text(cell_text, 40)  # Wrap text after 40 characters
                     column_width = max_length if max_length >= default_width else default_width
                     pdf.multi_cell(column_width * 2, 5, wrapped_text, 1, 'L')  # Print cell value with text wrapping
+                    pdf.ln()  # Move to the next line after multi_cell
                 else:
                     column_width = max_length if max_length >= default_width else default_width
                     pdf.cell(column_width * 2, 5, cell_text, 1, 0, 'L')  # Print cell value without text wrapping
