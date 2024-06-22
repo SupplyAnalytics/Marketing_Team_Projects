@@ -44,7 +44,7 @@ def generate_pdf(df):
                 lines = [cell_text[i:i+default_width] for i in range(0, len(cell_text), default_width)]
                 cell_text = "\n".join(lines)
 
-                pdf.multi_cell(max_length * 2, 5, cell_text, 1, 'L')  # Print cell value with text wrapping
+                pdf.cell(max_length * 2, 5, cell_text, 1, 0, 'L')  # Print cell value with text wrapping
 
             pdf.ln()
 
