@@ -1,0 +1,91 @@
+from __future__ import with_statement
+from AnalyticsClient import AnalyticsClient
+import pandas as pd
+import plotly.express as px
+import warnings
+from datetime import datetime
+warnings.filterwarnings('ignore')
+import json
+
+
+class Config:
+
+    CLIENTID = "1000.DQ32DWGNGDO7CV0V1S1CB3QFRAI72K";
+    CLIENTSECRET = "92dfbbbe8c2743295e9331286d90da900375b2b66c";
+    REFRESHTOKEN = "1000.0cd324af15278b51d3fc85ed80ca5c04.7f4492eb09c6ae494a728cd9213b53ce";
+
+    ORGID = "60006357703";
+    VIEWID="174857000109327742";
+    WORKSPACEID = "174857000004732522";
+
+class sample:
+    ac = AnalyticsClient(Config.CLIENTID, Config.CLIENTSECRET, Config.REFRESHTOKEN)
+
+    def export_data(self, ac, view_ids):
+        response_format = "csv"
+        file_path_template = "ProductAttributesFlatFile{}.csv"
+        bulk = ac.get_bulk_instance(Config.ORGID, Config.WORKSPACEID)
+        for view_id in view_ids:
+            file_path = file_path_template.format(view_id)
+            bulk.export_data(view_id, response_format, file_path)
+
+try:
+    obj = sample()
+    view_ids = ["174857000109327742"]  # Replace with your list of view IDs
+    obj.export_data(obj.ac, view_ids)
+
+except Exception as e:
+    print(str(e))
+
+df=pd.read_csv('ProductAttributesFlatFile174857000109327742.csv')
+
+df
+
+# Function to process JSON and create the required format
+def process_json(json_data):
+    attributes = json.loads(json_data)
+    lines = []
+    for i, attr in enumerate(attributes, 1):
+        line = f'{attr["name"]} - {attr["value"]}'
+        lines.append(line)
+    return '\n'.join(lines)
+
+# Apply the function to the json_column and create a new column processed_attributes
+df['Attributes'] = df['attribute'].apply(process_json)
+
+# Display the DataFrame with product_id and processed_attributes
+flat_df= df[['ProductId', 'Attributes']]
+
+# Create a new DataFrame from the flattened data
+flat_df = pd.DataFrame(flat_df)
+
+
+# Display the flattened DataFrame
+print(flat_df)
+
+flat_df.to_csv('PP_ProductAttributes_FlatFile.csv',index=False)
+
+# Export CSV File in ZOHO
+class Config:
+    CLIENTID = "1000.DQ32DWGNGDO7CV0V1S1CB3QFRAI72K"
+    CLIENTSECRET = "92dfbbbe8c2743295e9331286d90da900375b2b66c"
+    REFRESHTOKEN = "1000.0cd324af15278b51d3fc85ed80ca5c04.7f4492eb09c6ae494a728cd9213b53ce"
+    ORGID = "60006357703"
+    WORKSPACEID = "174857000004732522"
+
+class sample:
+    ac = AnalyticsClient(Config.CLIENTID, Config.CLIENTSECRET, Config.REFRESHTOKEN)      
+    def import_bulk_data_in_new_table(self, ac):
+        table_name = "ATT"
+        file_type = "csv"
+        auto_identify = "true"
+        file_path = "PP_ProductAttributes_FlatFile.csv"
+        bulk = ac.get_bulk_instance(Config.ORGID, Config.WORKSPACEID)
+        result = bulk.import_bulk_data_in_new_table(table_name, file_type, auto_identify, file_path)
+        print(result)
+try:
+    obj = sample()
+    obj.import_bulk_data_in_new_table(obj.ac)
+
+except Exception as e:
+    print(str(e))
