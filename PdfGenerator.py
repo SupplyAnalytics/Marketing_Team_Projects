@@ -21,7 +21,7 @@ def generate_pdf(df):
         # Create a new PDF file for each user
         pdf = FPDF(orientation='L')  # Set PDF to landscape mode
         pdf.add_page()
-        pdf.set_font("Arial", size=6)  # Reduce font size to 6
+        pdf.set_font("Arial", size=5)  # Reduce font size to 6
 
         # Add a title
         pdf.cell(200, 10, f"Details of SKID: {EmployeeId}", ln=True, align='C')
