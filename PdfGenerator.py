@@ -41,24 +41,41 @@ def generate_pdf(df):
         pdf.ln()
 
         # Add data to the table
+        # for _, row in group.iterrows():
+        #     for column, max_length in max_lengths.items():
+        #         cell_text = str(row[column]).replace('\n', ' ')  # Replace newline characters with spaces
+        #         cell_text = cell_text.strip() if cell_text != 'nan' else ''  # Replace 'nan' values with blanks
+        #         parts = cell_text.split(" ")
+        #         lines = []
+        #         line = ""
+        #         for part in parts:
+        #             if len(line) + len(part) < default_width:  # Adjust the length based on your requirement
+        #                 line += f" {part}"
+        #             else:
+        #                 lines.append(line)
+        #                 line = f"{part}"
+        #         if line:
+        #             lines.append(line)
+        #         cell_text = "\n".join(lines)
+        #         column_width = max_length if max_length >= default_width else default_width
+        #         pdf.cell(column_width * 2, 5, cell_text, 1, 0, 'L')  # Print cell value with text wrapping
+        #     pdf.ln()
+        # Add data to the table
         for _, row in group.iterrows():
             for column, max_length in max_lengths.items():
                 cell_text = str(row[column]).replace('\n', ' ')  # Replace newline characters with spaces
                 cell_text = cell_text.strip() if cell_text != 'nan' else ''  # Replace 'nan' values with blanks
-                parts = cell_text.split(" ")
-                lines = []
-                line = ""
-                for part in parts:
-                    if len(line) + len(part) < default_width:  # Adjust the length based on your requirement
-                        line += f" {part}"
-                    else:
-                        lines.append(line)
-                        line = f"{part}"
-                if line:
-                    lines.append(line)
-                cell_text = "\n".join(lines)
-                column_width = max_length if max_length >= default_width else default_width
-                pdf.cell(column_width * 2, 5, cell_text, 1, 0, 'L')  # Print cell value with text wrapping
+                
+                # Handle "Buyer Address" column with multiline wrapping
+                if column == "Buyer Address":
+                    # Check if the text exceeds 30 characters and wrap it if necessary
+                    wrapped_text = "\n".join([cell_text[i:i+30] for i in range(0, len(cell_text), 30)])  # Wrap text every 30 characters
+                    pdf.multi_cell(column_width * 2, 5, wrapped_text, border=1, align='L')  # Use multi_cell to wrap the text
+                else:
+                    # Use standard cell for other columns
+                    column_width = max_length if max_length >= default_width else default_width
+                    pdf.cell(column_width * 2, 5, cell_text, 1, 0, 'L')  # Print cell value normally
+        
             pdf.ln()
 
         # Save the PDF file
