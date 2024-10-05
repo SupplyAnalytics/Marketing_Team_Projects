@@ -40,7 +40,7 @@ def generate_pdf(df):
             pdf.cell(column_width * 2, 5, column[:10], 1, 0, 'C', 1)  # Set column width based on maximum text length or default width
         pdf.ln()
 
-        Add data to the table
+        # Add data to the table
         for _, row in group.iterrows():
             for column, max_length in max_lengths.items():
                 cell_text = str(row[column]).replace('\n', ' ')  # Replace newline characters with spaces
